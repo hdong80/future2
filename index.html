@@ -241,205 +241,300 @@
 <div style="height: 50px;"></div>
 
 <script>
-    async function fetchSheetData() {
-        const sheetId = '1JsMGoD5enBE0EtMfihOy_58HcG1dzcDfEtxn2M0Y65Q';
-        const apiKey = 'AIzaSyDrClgUbT-0cFoYe4W81dyxikZVbjVlcT8';
-        const range = 'Sheet0';
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
+   async function fetchSheetData() {
+    const sheetId = '1JsMGoD5enBE0EtMfihOy_58HcG1dzcDfEtxn2M0Y65Q';
+    const apiKey = 'AIzaSyDrClgUbT-0cFoYe4W81dyxikZVbjVlcT8';
+    const range = 'Sheet0';
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
 
-        try {
-            const response = await fetch(url);
-            const data = await response.json();
-            return data.values;
-        } catch (error) {
-            console.error('Error fetching sheet data:', error);
-            return [];
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.values;
+    } catch (error) {
+        console.error('Error fetching sheet data:', error);
+        return [];
+    }
+}
+
+function createParticipantElement(participantData, index) {
+    const [serial, name, phone, additionalPhone, photoUrl] = participantData;
+
+    const participantDiv = document.createElement('div');
+    participantDiv.classList.add('participant');
+    participantDiv.dataset.defaultColor = '#ffffff';
+
+    const numberButton = document.createElement('button');
+    numberButton.textContent = index + 1;
+    numberButton.classList.add('number-button');
+
+    const statusButton = document.createElement('button');
+    statusButton.textContent = '터치';
+    statusButton.classList.add('status-button');
+
+    const remarkInput = document.createElement('input');
+    remarkInput.type = 'text';
+    remarkInput.placeholder = '특이사항';
+    remarkInput.classList.add('remark-input');
+    remarkInput.dataset.index = index;
+
+    const serialDiv = document.createElement('div');
+    serialDiv.textContent = serial;
+    serialDiv.classList.add('serial-number');
+    serialDiv.style.marginRight = '10px';
+
+    const nameDiv = document.createElement('div');
+    nameDiv.textContent = name || '-';
+    nameDiv.classList.add('name-box');
+
+    participantDiv.appendChild(numberButton);
+    participantDiv.appendChild(statusButton);
+    participantDiv.appendChild(serialDiv);
+    participantDiv.appendChild(nameDiv);
+    participantDiv.appendChild(remarkInput);
+
+    if (phone && phone.trim() !== '') {
+        const callButton1 = document.createElement('a');
+        callButton1.href = `tel:${phone}`;
+        callButton1.className = 'call-button';
+        callButton1.textContent = '전화';
+        participantDiv.appendChild(callButton1);
+    }
+
+    if (additionalPhone && additionalPhone.trim() !== '') {
+        const callButton2 = document.createElement('a');
+        callButton2.href = `tel:${additionalPhone}`;
+        callButton2.className = 'call-button';
+        callButton2.textContent = '학부모';
+        participantDiv.appendChild(callButton2);
+    }
+
+    if (photoUrl) {
+        const img = document.createElement('img');
+        img.src = photoUrl;
+        img.alt = 'Participant Image';
+        img.classList.add('participant-img');
+        participantDiv.insertBefore(img, statusButton.nextSibling);
+    }
+
+    let clickCount = 0;
+    statusButton.onclick = () => {
+        clickCount++;
+        switch (clickCount) {
+            case 1:
+                participantDiv.style.backgroundColor = 'lightskyblue';
+                statusButton.textContent = '출석';
+                break;
+            case 2:
+                participantDiv.style.backgroundColor = 'lightpink';
+                statusButton.textContent = '지각';
+                break;
+            case 3:
+                participantDiv.style.backgroundColor = 'red';
+                statusButton.textContent = '결석';
+                break;
+            case 4:
+                clickCount = 0;
+                participantDiv.style.backgroundColor = participantDiv.dataset.defaultColor;
+                statusButton.textContent = '터치';
+                break;
         }
-    }
-
-    async function showAllStudents() {
-        const participantsContainer = document.getElementById('participants');
-        participantsContainer.innerHTML = ''; // Clear existing data
-
-        const sheetData = await fetchSheetData();
-        const participants = sheetData.slice(1); // Exclude header row
-
-        participants.forEach((participantData, index) => {
-            const participantElement = createParticipantElement(participantData, index);
-            participantsContainer.appendChild(participantElement);
-        });
-    }
-
-    async function show2ndGrade() {
-        const participantsContainer = document.getElementById('participants');
-        participantsContainer.innerHTML = ''; // Clear existing data
-
-        const sheetData = await fetchSheetData();
-        const participants = sheetData.slice(1); // Exclude header row
-
-        const filteredParticipants = participants.filter(participant => participant[0].startsWith('2')); // 학번이 2로 시작하는 학생만 필터링
-
-        filteredParticipants.forEach((participantData, index) => {
-            const participantElement = createParticipantElement(participantData, index);
-            participantsContainer.appendChild(participantElement);
-        });
-    }
-
-    async function show1stGrade() {
-        const participantsContainer = document.getElementById('participants');
-        participantsContainer.innerHTML = ''; // Clear existing data
-
-        const sheetData = await fetchSheetData();
-        const participants = sheetData.slice(1); // Exclude header row
-
-        const filteredParticipants = participants.filter(participant => participant[0].startsWith('1')); // 학번이 1로 시작하는 학생만 필터링
-
-        filteredParticipants.forEach((participantData, index) => {
-            const participantElement = createParticipantElement(participantData, index);
-            participantsContainer.appendChild(participantElement);
-        });
-    }
-
-    async function updateSummaryCounts() {
-        const participants = document.querySelectorAll('.participant');
-        let attendanceCount = 0;
-        let tardyCount = 0;
-        let absentCount = 0;
-
-        participants.forEach(participant => {
-            const status = participant.querySelector('.status-button').textContent;
-            switch (status) {
-                case '출석':
-                    attendanceCount++;
-                    break;
-                case '지각':
-                    tardyCount++;
-                    break;
-                case '결석':
-                    absentCount++;
-                    break;
-            }
-        });
-
-        document.getElementById('attendance-summary').textContent = `출석: ${attendanceCount}`;
-        document.getElementById('tardy-summary').textContent = `지각: ${tardyCount}`;
-        document.getElementById('absent-summary').textContent = `결석: ${absentCount}`;
-    }
-
-    function getCurrentDate() {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    }
-
-    function updateDateInfo() {
-        document.getElementById('date-info').textContent = getCurrentDate();
-    }
-
-    document.getElementById('copy-button').addEventListener('click', async () => {
-        const textToCopy = document.getElementById('participants').innerText;
-        await navigator.clipboard.writeText(textToCopy);
-        alert('명단이 복사되었습니다.');
-    });
-
-    document.getElementById('popup-overlay').addEventListener('click', function (event) {
-        if (event.target === this) {
-            this.style.display = 'none';
-        }
-    });
-
-    document.getElementById('popup-close-button').addEventListener('click', function () {
-        document.getElementById('popup-overlay').style.display = 'none';
-    });
-
-    document.getElementById('all-attendance-button').addEventListener('click', function () {
-        const participants = document.querySelectorAll('.participant');
-        participants.forEach(participant => {
-            participant.style.backgroundColor = 'lightskyblue';
-            participant.querySelector('.status-button').textContent = '출석';
-        });
 
         updateSummaryCounts();
+        saveParticipantState(index, { clickCount, status: statusButton.textContent, backgroundColor: participantDiv.style.backgroundColor, remark: remarkInput.value });
+    };
+
+    restoreParticipantState(participantDiv, index, (state) => {
+        clickCount = state.clickCount;
+        statusButton.textContent = state.status;
+        participantDiv.style.backgroundColor = state.backgroundColor;
+        if (state.remark) {
+            remarkInput.value = state.remark;
+        }
     });
 
-    document.getElementById('reset-button').addEventListener('click', function () {
-        const participants = document.querySelectorAll('.participant');
-        participants.forEach(participant => {
-            participant.style.backgroundColor = participant.dataset.defaultColor;
-            participant.querySelector('.status-button').textContent = '터치';
-            participant.querySelector('.remark-input').value = '';
-        });
+    return participantDiv;
+}
 
-        localStorage.removeItem('participantsState');
-        updateSummaryCounts();
+function saveParticipantState(index, state) {
+    const participantsState = JSON.parse(localStorage.getItem('participantsState')) || {};
+    participantsState[index] = state;
+    localStorage.setItem('participantsState', JSON.stringify(participantsState));
+}
+
+function restoreParticipantState(participantDiv, index, callback) {
+    const participantsState = JSON.parse(localStorage.getItem('participantsState')) || {};
+    const state = participantsState[index];
+    if (state) {
+        callback(state);
+    }
+}
+
+async function loadParticipants() {
+    const participantsContainer = document.getElementById('participants');
+    participantsContainer.innerHTML = ''; // Clear existing data
+
+    const sheetData = await fetchSheetData();
+    const participants = sheetData.slice(1); // Exclude header row
+
+    participants.forEach((participantData, index) => {
+        const participantElement = createParticipantElement(participantData, index);
+        participantsContainer.appendChild(participantElement);
+    });
+}
+
+async function showAllStudents() {
+    const participantsContainer = document.getElementById('participants');
+    participantsContainer.innerHTML = ''; // Clear existing data
+
+    const sheetData = await fetchSheetData();
+    const participants = sheetData.slice(1); // Exclude header row
+
+    participants.forEach((participantData, index) => {
+        const participantElement = createParticipantElement(participantData, index);
+        participantsContainer.appendChild(participantElement);
+    });
+}
+
+async function show2ndGrade() {
+    const participantsContainer = document.getElementById('participants');
+    participantsContainer.innerHTML = ''; // Clear existing data
+
+    const sheetData = await fetchSheetData();
+    const participants = sheetData.slice(1); // Exclude header row
+
+    const filteredParticipants = participants.filter(participant => participant[0].startsWith('2')); // 학번이 2로 시작하는 학생만 필터링
+
+    filteredParticipants.forEach((participantData, index) => {
+        const participantElement = createParticipantElement(participantData, index);
+        participantsContainer.appendChild(participantElement);
+    });
+}
+
+async function show1stGrade() {
+    const participantsContainer = document.getElementById('participants');
+    participantsContainer.innerHTML = ''; // Clear existing data
+
+    const sheetData = await fetchSheetData();
+    const participants = sheetData.slice(1); // Exclude header row
+
+    const filteredParticipants = participants.filter(participant => participant[0].startsWith('1')); // 학번이 1로 시작하는 학생만 필터링
+
+    filteredParticipants.forEach((participantData, index) => {
+        const participantElement = createParticipantElement(participantData, index);
+        participantsContainer.appendChild(participantElement);
+    });
+}
+
+async function updateSummaryCounts() {
+    const participants = document.querySelectorAll('.participant');
+    let attendanceCount = 0;
+    let tardyCount = 0;
+    let absentCount = 0;
+
+    participants.forEach(participant => {
+        const status = participant.querySelector('.status-button').textContent;
+        switch (status) {
+            case '출석':
+                attendanceCount++;
+                break;
+            case '지각':
+                tardyCount++;
+                break;
+            case '결석':
+                absentCount++;
+                break;
+        }
     });
 
-    loadParticipants();
-    updateDateInfo();
+    document.getElementById('attendance-summary').textContent = `출석: ${attendanceCount}`;
+    document.getElementById('tardy-summary').textContent = `지각: ${tardyCount}`;
+    document.getElementById('absent-summary').textContent = `결석: ${absentCount}`;
+}
+
+function getCurrentDate() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function updateDateInfo() {
+    document.getElementById('date-info').textContent = getCurrentDate();
+}
+
+document.getElementById('copy-button').addEventListener('click', async () => {
+    const textToCopy = document.getElementById('participants').innerText;
+    await navigator.clipboard.writeText(textToCopy);
+    alert('명단이 복사되었습니다.');
+});
+
+document.getElementById('popup-overlay').addEventListener('click', function (event) {
+    if (event.target === this) {
+        this.style.display = 'none';
+    }
+});
+
+document.getElementById('popup-close-button').addEventListener('click', function () {
+    document.getElementById('popup-overlay').style.display = 'none';
+});
+
+document.getElementById('all-attendance-button').addEventListener('click', function () {
+    const participants = document.querySelectorAll('.participant');
+    participants.forEach(participant => {
+        participant.style.backgroundColor = 'lightskyblue';
+        participant.querySelector('.status-button').textContent = '출석';
+    });
+
     updateSummaryCounts();
+});
 
-    let isDropdownOpen = false; // 드롭다운 메뉴 상태를 추적하는 변수
-
-    document.getElementById('dropdownMenuButton').addEventListener('click', function() {
-        isDropdownOpen = !isDropdownOpen; // 드롭다운 메뉴 상태 토글
-        document.querySelector('.dropdown-content').style.display = isDropdownOpen ? 'block' : 'none';
+document.getElementById('reset-button').addEventListener('click', function () {
+    const participants = document.querySelectorAll('.participant');
+    participants.forEach(participant => {
+        participant.style.backgroundColor = participant.dataset.defaultColor;
+        participant.querySelector('.status-button').textContent = '터치';
+        participant.querySelector('.remark-input').value = '';
     });
 
-    document.addEventListener('click', function(event) {
-        const dropdownContent = document.querySelector('.dropdown-content');
-        if (!dropdownContent.contains(event.target) && !document.getElementById('dropdownMenuButton').contains(event.target)) {
-            isDropdownOpen = false;
-            dropdownContent.style.display = 'none'; // 드롭다운 메뉴 접기
-        }
-    });
+    localStorage.removeItem('participantsState');
+    updateSummaryCounts();
+});
 
-    document.getElementById('show-all-students').addEventListener('click', async () => {
-        await showAllStudents();
-        document.getElementById('popup-overlay').style.display = 'none';
-    });
+loadParticipants();
+updateDateInfo();
+updateSummaryCounts();
 
-    document.getElementById('show-2nd-grade').addEventListener('click', async () => {
-        await show2ndGrade();
-        document.getElementById('popup-overlay').style.display = 'none';
-    });
+let isDropdownOpen = false; // 드롭다운 메뉴 상태를 추적하는 변수
 
-    document.getElementById('show-1st-grade').addEventListener('click', async () => {
-        await show1stGrade();
-        document.getElementById('popup-overlay').style.display = 'none';
-    });
+document.getElementById('dropdownMenuButton').addEventListener('click', function() {
+    isDropdownOpen = !isDropdownOpen; // 드롭다운 메뉴 상태 토글
+    document.querySelector('.dropdown-content').style.display = isDropdownOpen ? 'block' : 'none';
+});
 
-    function copyAttendanceStatus() {
-        let csvText = "학번\t이름\t출결\t특이사항\n";
-
-        const participants = document.querySelectorAll('.participant');
-        participants.forEach((participant) => {
-            const serialDiv = participant.querySelector('.serial-number');
-            const nameDiv = participant.querySelector('.name-box');
-            const statusDiv = participant.querySelector('.status-box');
-            const remarkDiv = participant.querySelector('.remark-box');
-
-            const serial = serialDiv.textContent;
-            const name = nameDiv.textContent;
-            const status = statusDiv.textContent;
-            const remark = remarkDiv.textContent;
-
-            csvText += `${serial}\t${name}\t${status}\t${remark}\n`;
-        });
-
-        // CSV 형식으로 복사
-        navigator.clipboard.writeText(csvText)
-            .then(() => {
-                alert('출결 상태가 복사되었습니다.');
-            })
-            .catch((err) => {
-                console.error('클립보드 복사 실패:', err);
-            });
+document.addEventListener('click', function(event) {
+    const dropdownContent = document.querySelector('.dropdown-content');
+    if (!dropdownContent.contains(event.target) && !document.getElementById('dropdownMenuButton').contains(event.target)) {
+        isDropdownOpen = false;
+        dropdownContent.style.display = 'none'; // 드롭다운 메뉴 접기
     }
-</script>
-</body>
-</html>
+});
+document.getElementById('show-all-students').addEventListener('click', async () => {
+    await showAllStudents();
+    document.getElementById('popup-overlay').style.display = 'none';
+});
 
+document.getElementById('show-2nd-grade').addEventListener('click', async () => {
+    await show2ndGrade();
+    document.getElementById('popup-overlay').style.display = 'none';
+});
+
+document.getElementById('show-1st-grade').addEventListener('click', async () => {
+    await show1stGrade();
+    document.getElementById('popup-overlay').style.display = 'none';
+});
+
+</script>
 </body>
 </html>
