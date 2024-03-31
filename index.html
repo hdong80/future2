@@ -74,7 +74,7 @@
             font-size: 40px;
         }
 
-        .call-button, .reset-button, .capture-button {
+        .call-button, .reset-button, .capture-button, .copy-button {
             background-color: #ffff99;
             color: black;
             padding: 6px 12px;
@@ -229,7 +229,7 @@
     <button id="attendance-summary" class="summary-button">출석: 0</button>
     <button id="tardy-summary" class="summary-button">지각: 0</button>
     <button id="absent-summary" class="summary-button">결석: 0</button>
-    <button id="copy-button" class="control-button">복사</button>
+    <button id="copy-button" class="copy-button">복사</button>
 </div>
 
 <div id="popup-overlay" class="popup-overlay">
@@ -465,7 +465,9 @@ function updateDateInfo() {
 }
 
 document.getElementById('copy-button').addEventListener('click', async () => {
-    copyAttendanceStatus();
+    const textToCopy = document.getElementById('participants').innerText;
+    await navigator.clipboard.writeText(textToCopy);
+    alert('명단이 복사되었습니다.');
 });
 
 document.getElementById('popup-overlay').addEventListener('click', function (event) {
@@ -518,7 +520,6 @@ document.addEventListener('click', function(event) {
         dropdownContent.style.display = 'none'; // 드롭다운 메뉴 접기
     }
 });
-
 document.getElementById('show-all-students').addEventListener('click', async () => {
     await showAllStudents();
     document.getElementById('popup-overlay').style.display = 'none';
