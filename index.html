@@ -1,259 +1,283 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>출석체크 시스템</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            padding-top: 60px; /* 위 여유 공간 추가 */
-            padding-bottom: 100px; /* 아래 여유 공간 추가 */
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2학년 오늘의 공지사항</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    text-align: center;
+  }
+  .notice-block {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+  }
+  .notice-number {
+    margin-right: 10px;
+    padding: 10px;
+    border: 2px solid #000;
+    border-radius: 10px;
+    font-weight: bold;
+  }
+  .notice-content {
+    flex: 1;
+    padding: 20px;
+    border: 2px solid #FFD700;
+    border-radius: 10px;
+    text-align: left;
+    white-space: pre-wrap;
+    position: relative;
+  }
+  .notice-content img {
+    max-width: 100%;
+    margin-bottom: 10px;
+  }
+  .notice-content.weekly {
+    background-color: #FFFACD; /* 매우 연한 노란색 */
+  }
+  .notice-content.lookup {
+    background-color: #ADD8E6; /* 연한 파란색 */
+  }
+  .notice-content.closing {
+    background-color: #FFB6C1; /* 연한 분홍색 */
+  }
+  #date {
+    margin-bottom: 20px;
+  }
+  .button {
+    padding: 5px 10px;
+    font-size: 14px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-top: 5px;
+  }
+  #print-button {
+    margin-top: 20px;
+  }
+  #copy-button {
+    margin-top: 20px;
+  }
+  #category-buttons {
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  #category-buttons button {
+    margin-right: 10px;
+  }
+  #date-selection {
+    margin-bottom: 20px;
+  }
+  .button-group {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+  }
+  .button-group button {
+    flex: 1;
+    margin-right: 5px;
+  }
 
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            grid-auto-rows: 100px;
-            gap: 10px;
-            padding: 10px;
-            overflow-x: auto;
-            overflow-y: hidden;
-            margin: 0;
-        }
+  @media screen and (max-width: 600px) {
+    .notice-content img {
+      max-width: 100%;
+      height: auto;
+    }
+  }
 
-        .student-box {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-        }
-
-        .attendance-dropdown {
-            margin-top: 5px;
-            width: calc(110% - 20px);
-        }
-
-        .status-bar {
-            position: fixed;
-            top: 10px;
-            left: 0;
-            width: 100%;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            background-color: #f0f0f0;
-            padding: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 1;
-        }
-
-        #date-selector {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
-            background-color: #f0f0f0;
-            padding: 10px;
-            display: flex;
-            align-items: center;
-            z-index: 1;
-        }
-
-        #reset {
-            padding: 5px 10px;
-            font-size: 80%;
-        }
-
-        /* Media Query for Mobile Devices */
-        @media only screen and (max-width: 600px) {
-            .grid-container {
-                grid-template-columns: repeat(6, 15%); /* 수정: 박스 크기를 양 옆으로 두 배로 늘림 */
-            }
-
-            .status-bar {
-                top: 0;
-                bottom: auto;
-            }
-
-           .student-box {
-                font-size: 65%;
-            }
-        }
-
-       .attendance-dropdown {
-                 width: 105%;
-                font-size: 60%; /* 드롭다운의 글씨 크기를 더 줄임 */
-                visibility: visible; /* 수정: 드롭다운을 항상 표시 */
-            }
-
-            .has-data {
-                background-color: #ffe0b2; /* 연한 주황색 배경 적용 */
-            }
-
-            select {
-                font-size: 8px; /* 드롭다운의 글씨 크기를 키움 */
-            }
-        }
-    </style>
+  @media print {
+    .notice-content img {
+      max-width: 100%;
+      max-height: 95vh;
+      page-break-inside: avoid;
+    }
+    .notice-block {
+      page-break-inside: avoid;
+    }
+  }
+</style>
 </head>
 <body>
-    <div id="container" class="grid-container"></div>
-
-    <div id="date-selector">
-        <select id="year-dropdown">
-            <option value="2024">2024년</option>
-        </select>
-        <select id="month-dropdown"></select>
-        <select id="day-dropdown"></select>
-        <button id="fetch-data">데이터 불러오기</button>
-        <button id="save-data">데이터 저장하기</button>
-    </div>
-
-    <div class="status-bar">
-        <div id="attendance-summary"></div>
-        <button id="reset">리셋</button>
-    </div>
+<h1>2학년 오늘의 공지사항</h1>
+<div id="date-selection">
+  <label for="date-picker">날짜 선택:</label>
+  <select id="date-picker">
+    <option value="today">오늘</option>
+    <option value="yesterday">어제</option>
+  </select>
+</div>
+<div id="category-buttons">
+  <button onclick="showCategory('all')">전체 다 보기</button>
+  <button onclick="showCategory('lookup')">조회만 보기</button>
+  <button onclick="showCategory('closing')">종례만 보기</button>
+</div>
+<p id="date"></p>
+<div id="notice"></div>
+<button id="print-button" class="button">출력</button>
+<button id="copy-button" class="button">전체 내용 복사</button>
 
 <script>
-const sheetId = '1qLoowj5R94pgLCS5TNtm8UA6Yd0dmWKAKq71e28kySk';
-const apiKey = 'AIzaSyDrClgUbT-0cFoYe4W81dyxikZVbjVlcT8';
-const ranges = ['B2:B7', 'D2:D7', 'F2:F7', 'H2:H7', 'J2:J7', 'L2:L7'];
-const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values:batchGet?ranges=${ranges.join('&ranges=')}&key=${apiKey}`;
+  async function fetchSheetData(date) {
+    let sheetName;
+    if (date === 'yesterday') {
+        sheetName = 'Sheet2'; // 어제의 시트 이름으로 변경
+    } else {
+        sheetName = 'Sheet1'; // 오늘의 시트 이름
+    }
 
-async function fetchData(date) {
+    const sheetId = '1wsg1cQgwqJ0qlILEt7KIeSutThwstAXlX2oHLBbYg8o'; // 시트 ID
+    const apiKey = 'AIzaSyDrClgUbT-0cFoYe4W81dyxikZVbjVlcT8'; // Google Sheets API 키
+    const range = `${sheetName}!A:B`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
+
     try {
-        const response = await fetch(url);
-        const data = await response.json();
-        const studentData = [];
-        
-        data.valueRanges.forEach(rangeData => {
-            const values = rangeData.values;
-            for (let i = 0; i < values.length; i++) {
-                if (!studentData[i]) studentData[i] = [];
-                studentData[i].push(values[i][0] || '없음'); // Add '없음' if empty
-            }
-        });
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.values && data.values.length > 0) {
+        const noticeHtml = data.values.map((row, index) => {
+          const content = row[1] ? (row[1].startsWith('http') ? `<img src="${row[1]}" alt="이미지">` : row[1]) : '';
+          let className = 'notice-content';
+          if (content.includes('(주간공지)')) {
+            className += ' weekly';
+          }
+          if (content.includes('(조회)')) {
+            className += ' lookup';
+          }
+          if (content.includes('(종례)')) {
+            className += ' closing';
+          }
+          const imageButtons = `
+            <div class="button-group">
+              <button class="button" onclick="viewImage(this)">이미지 크게 보기</button>
+              <button class="button" onclick="downloadImage(this)">이미지 다운로드</button>
+            </div>`;
+          return `<div class="notice-block">
+                    <div class="notice-number">${index + 1}</div>
+                    <div class="${className}">${content}${content.includes('<img') ? imageButtons : ''}</div>
+                  </div>`;
+        }).join('');
+        document.getElementById('notice').innerHTML = noticeHtml;
+      } else {
+        document.getElementById('notice').innerHTML = '해당 날짜에 공지사항이 없습니다.';
+      }
 
-        populateStudents(studentData);
+      document.getElementById('date').textContent = `${date === 'today' ? '오늘' : '어제'}의 공지사항`;
     } catch (error) {
-        console.error('Error:', error);
+      console.error('Error fetching data:', error);
+      document.getElementById('notice').innerHTML = '데이터를 가져오는 중 오류가 발생했습니다.';
     }
-}
+  }
 
-function populateStudents(studentData) {
-    const container = document.getElementById('container');
-    container.innerHTML = ''; // Clear previous data
-    studentData.forEach(row => {
-        row.forEach(student => {
-            const studentBox = document.createElement('div');
-            studentBox.className = 'student-box';
-            studentBox.textContent = student; // Assuming entry is the student name
-
-            const dropdown = document.createElement('select');
-            dropdown.className = 'attendance-dropdown';
-            dropdown.innerHTML = `
-                <option value="none">${student === '없음' ? '선택' : '출석'}</option>
-                <option value="출석">출석</option>
-                <option value="지각">지각</option>
-                <option value="결석">결석</option>
-                <option value="조퇴">조퇴</option>
-            `;
-            if (student !== '없음') {
-                dropdown.value = '출석'; // 데이터가 있으면 출석으로 시작
-                studentBox.classList.add('has-data'); // 데이터가 있는 상자에 클래스 추가
-            }
-            studentBox.appendChild(dropdown);
-            container.appendChild(studentBox);
-
-            // 드롭다운 변경 시 출결 통계 업데이트
-            dropdown.addEventListener('change', calculateStatistics);
-        });
-    });
-    calculateStatistics(); // 초기 통계 계산
-}
-
-function calculateStatistics() {
-    const attendanceDropdowns = document.querySelectorAll('.attendance-dropdown');
-    const totalStudents = attendanceDropdowns.length;
-    let attendanceCount = 0, lateCount = 0, absentCount = 0, leaveCount = 0;
-
-    attendanceDropdowns.forEach(dropdown => {
-        const value = dropdown.value;
-        if (value === '출석') attendanceCount++;
-        else if (value === '지각') lateCount++;
-        else if (value === '결석') absentCount++;
-        else if (value === '조퇴') leaveCount++;
-    });
-
-    document.getElementById('attendance-summary').textContent = `전체: ${totalStudents} | 출석: ${attendanceCount} | 지각: ${lateCount} | 결석: ${absentCount} | 조퇴: ${leaveCount}`;
-}
-
-document.getElementById('reset').addEventListener('click', function() {
-    resetAttendance();
-    calculateStatistics();
-});
-
-document.getElementById('fetch-data').addEventListener('click', function() {
-    const year = document.getElementById('year-dropdown').value;
-    const month = document.getElementById('month-dropdown').value;
-    const day = document.getElementById('day-dropdown').value;
-    const date = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-    fetchData(date);
-    alert('데이터가 불러와졌습니다.');
-});
-
-document.getElementById('save-data').addEventListener('click', function() {
-    const attendanceData = collectAttendanceData();
-    const year = document.getElementById('year-dropdown').value;
-    const month = document.getElementById('month-dropdown').value;
-    const day = document.getElementById('day-dropdown').value;
-    const date = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-    localStorage.setItem(date, JSON.stringify(attendanceData));
-    alert('데이터가 저장되었습니다.');
-});
-
-function resetAttendance() {
-    document.querySelectorAll('.attendance-dropdown').forEach(dropdown => {
-        dropdown.value = 'none';
-    });
-}
-
-function collectAttendanceData() {
-    const data = [];
-    document.querySelectorAll('.student-box').forEach((box, index) => {
-        const studentName = box.textContent.trim();
-        const attendanceStatus = box.querySelector('.attendance-dropdown').value;
-        data.push({ name: studentName, status: attendanceStatus });
-    });
-    return data;
-}
-
-window.onload = function() {
-    // 월, 일 드롭다운 초기화 로직 유지
-    const monthDropdown = document.getElementById('month-dropdown');
-    for (let i = 1; i <= 12; i++) {
-        monthDropdown.innerHTML += `<option value="${i}">${i}월</option>`;
-    }
-
-    const dayDropdown = document.getElementById('day-dropdown');
-    for (let i = 1; i <= 31; i++) {
-        dayDropdown.innerHTML += `<option value="${i}">${i}일</option>`;
-    }
-
-    // Set today's date as default
+  function getYesterdaySheetName() {
     const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth() + 1;
-    const day = today.getDate();
-    document.getElementById('year-dropdown').value = year;
-    document.getElementById('month-dropdown').value = month;
-    document.getElementById('day-dropdown').value = day;
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const month = String(yesterday.getMonth() + 1).padStart(2, '0');
+    const day = String(yesterday.getDate()).padStart(2, '0');
+    return `${month}/${day}`;
+  }
 
-    // Fetch data for today initially
-    fetchData(`${year}-${month}-${day}`);
-};
+  document.getElementById('date-picker').addEventListener('change', function() {
+    const selectedDate = this.value;
+    fetchSheetData(selectedDate);
+  });
+
+  fetchSheetData('today');
+
+  document.getElementById('print-button').addEventListener('click', function() {
+    window.print();
+  });
+
+  document.getElementById('copy-button').addEventListener('click', function() {
+    copyContent();
+  });
+
+  async function copyContent() {
+    const copyText = document.getElementById('notice').innerText;
+    navigator.clipboard.writeText(copyText).then(() => {
+      alert('전체 내용이 클립보드에 복사되었습니다.');
+    }).catch(err => {
+      console.error('Error copying text: ', err);
+      alert('복사 중 오류가 발생했습니다.');
+    });
+  }
+
+  function showCategory(category) {
+    const allContent = document.querySelectorAll('.notice-content');
+    allContent.forEach(content => {
+      if (category === 'all') {
+        content.style.display = 'block';
+      } else if (category === 'weekly') {
+        content.style.display = content.classList.contains('weekly') ? 'block' : 'none';
+      } else if (category === 'lookup') {
+        content.style.display = content.classList.contains('lookup') || content.classList.contains('weekly') ? 'block' : 'none';
+      } else if (category === 'closing') {
+        content.style.display = content.classList.contains('closing') || content.classList.contains('weekly') ? 'block' : 'none';
+      }
+    });
+  }
+
+  function viewImage(button) {
+    const noticeContent = button.parentElement.parentElement;
+    const image = noticeContent.querySelector('img');
+    if (image) {
+      window.open(image.src, '_blank');
+    } else {
+      alert('이미지가 없습니다.');
+    }
+  }
+
+  function downloadImage(button) {
+    const noticeContent = button.parentElement.parentElement;
+    const image = noticeContent.querySelector('img');
+    if (image) {
+      const imageUrl = image.src;
+      downloadImg(imageUrl);
+    } else {
+      alert('이미지가 없습니다.');
+    }
+  }
+
+  function downloadImg(imgSrc) {
+    var image = new Image();
+    image.crossOrigin = "anonymous";
+    image.src = imgSrc;
+    var fileName = image.src.split("/").pop();
+    image.onload = function() {
+      var canvas = document.createElement('canvas');
+      canvas.width = this.width;
+      canvas.height = this.height;
+      canvas.getContext('2d').drawImage(this, 0, 0);
+      if (typeof window.navigator.msSaveBlob !== 'undefined') {
+        window.navigator.msSaveBlob(dataURLtoBlob(canvas.toDataURL()), fileName);
+      } else {
+        var link = document.createElement('a');
+        link.href = canvas.toDataURL();
+        link.download = fileName;
+        link.click();
+      }
+    };
+  }
+
+  function dataURLtoBlob(dataurl) {
+    var arr = dataurl.split(','),
+      mime = arr[0].match(/:(.*?);/)[1],
+      bstr = atob(arr[1]),
+      n = bstr.length,
+      u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], {
+      type: mime
+    });
+  }
 </script>
 </body>
 </html>
